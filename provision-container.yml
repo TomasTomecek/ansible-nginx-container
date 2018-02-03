@@ -1,0 +1,54 @@
+---
+- hosts: localhost
+  connection: local
+  # gather_facts: false
+  vars:
+    image: fedora:27
+    container_name: build_container
+    image_name: nginx
+    container_engine: buildah  # or docker
+  tasks:
+  - name: Obtain base image and create a container out of it
+    command: 'buildah from --name {{ container_name }} docker://{{ image }}'
+    become: true
+    when: container_engine == 'buildah'
+
+  - block:
+    - name: Make the base image available locally
+      docker_image:
+        name: '{{ image }}'
+    - name: Create the container
+      docker_container:
+        image: '{{ image }}'
+        name: '{{ container_name }}'
+        command: sleep infinity
+    when: container_engine == 'docker'
+
+  - name: add the newly created container to the inventory
+    add_host:
+      hostname: '{{ container_name }}'
+      ansible_connection: '{{ container_engine }}'
+      ansible_python_interpreter: /usr/bin/python3  # fedora container doesn't ship python2
+
+  - name: run the role in the container
+    delegate_to: '{{ container_name }}'
+    include_role:
+      name: sample-nginx
+
+  - block:
+    - name: Change default command of the container image
+      command: 'buildah config --cmd "nginx -g \"daemon off;\"" {{ container_name }}'
+    - name: Commit the container and make it an image
+      command: 'buildah commit --rm {{ container_name }} docker-daemon:{{ image_name }}:latest'
+    when: container_engine == 'buildah'
+
+  - block:
+    - name: Commit the container and make it an image
+      command: docker commit \
+        -c 'CMD ["nginx", "-g", "daemon off;"]' \
+        {{ container_name }} {{ image_name }}
+    - name: remove the container
+      docker_container:
+        name: '{{ container_name }}'
+        state: absent
+    when: container_engine == 'docker'

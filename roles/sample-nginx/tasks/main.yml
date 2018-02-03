@@ -1,0 +1,6 @@
+- name: install nginx
+  dnf:
+    name: nginx
+    state: installed
+- name: clean dnf metadata
+  command: dnf clean all
