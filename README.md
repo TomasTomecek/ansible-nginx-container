@@ -1,6 +1,6 @@
 # Provisioning a container image using Ansible.
 
-[This repo contains files for this blog post](https://blog.tomecek.net/post/building-containers-with-buildah-and-ansible/)
+[This repo contains files for this blog post.](https://blog.tomecek.net/post/building-containers-with-buildah-and-ansible/)
 
 The `./provision-container.yml` Ansible playbook is able to create a container
 according to a specified base image and execute an Ansible role in it, thus
