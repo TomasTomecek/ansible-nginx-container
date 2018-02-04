@@ -24,13 +24,13 @@
         command: sleep infinity
     when: container_engine == 'docker'
 
-  - name: add the newly created container to the inventory
+  - name: Add the newly created container to the inventory
     add_host:
       hostname: '{{ container_name }}'
       ansible_connection: '{{ container_engine }}'
       ansible_python_interpreter: /usr/bin/python3  # fedora container doesn't ship python2
 
-  - name: run the role in the container
+  - name: Run the role in the container
     delegate_to: '{{ container_name }}'
     include_role:
       name: sample-nginx
@@ -47,7 +47,7 @@
       command: docker commit \
         -c 'CMD ["nginx", "-g", "daemon off;"]' \
         {{ container_name }} {{ image_name }}
-    - name: remove the container
+    - name: Remove the container
       docker_container:
         name: '{{ container_name }}'
         state: absent
